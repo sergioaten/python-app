@@ -82,10 +82,26 @@ class DesocuparAsiento(Resource):
         
         return {'message': 'Asiento desocupado exitosamente'}, 200
 
+# Definición del recurso para consultar los asientos libres
+class AsientosLibres(Resource):
+    def get(self):
+        asientos_libres = Asiento.query.filter_by(estado='libre').all()
+        numeros_libres = [asiento.numero for asiento in asientos_libres]
+        return jsonify({'asientos_libres': numeros_libres})
+
+# Definición del recurso para consultar los asientos ocupados
+class AsientosOcupados(Resource):
+    def get(self):
+        asientos_ocupados = Asiento.query.filter_by(estado='ocupado').all()
+        numeros_ocupados = [asiento.numero for asiento in asientos_ocupados]
+        return jsonify({'asientos_ocupados': numeros_ocupados})
+
 # Agregar los recursos a la API
 api.add_resource(EstadoAsientos, '/asientos')
 api.add_resource(OcuparAsiento, '/asientos/ocupar')
 api.add_resource(DesocuparAsiento, '/asientos/desocupar')
+api.add_resource(AsientosLibres, '/asientos/libres')
+api.add_resource(AsientosOcupados, '/asientos/ocupados')
 
 if __name__ == '__main__':
     with app.app_context():
