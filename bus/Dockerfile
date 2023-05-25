@@ -9,13 +9,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia el archivo srv_bus.py al directorio /srv
-COPY caja.py /srv/caja.py
+COPY *.py /srv/
 
 # Expone el puerto 6901
-EXPOSE 6901
+EXPOSE 7000
 
 # Establece el directorio de trabajo
 WORKDIR /srv
 
 # Ejecuta el servidor Flask
-CMD ["python", "caja.py"]
+CMD ["python", "srv_bus.py"]
