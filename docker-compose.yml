@@ -1,0 +1,25 @@
+version: '3'
+services:
+  cajero:
+    build:
+      context: ./cajero
+    ports:
+      - 6901:6901
+
+  bus:
+    build:
+      context: ./bus
+    ports:
+      - 7000:7000
+
+  registro:
+    build:
+      context: ./registro
+    ports:
+      - 6900:6900
+
+  tienda:
+    build:
+      context: ./tienda
+    ports:
+      - 8888:8888
