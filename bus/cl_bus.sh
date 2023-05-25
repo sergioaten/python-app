@@ -1,69 +1,115 @@
 #!/bin/bash
 
-BASE_URL="http://localhost:7000"
+BASE_URL="http://localhost:7000"  # URL base del servidor
 
-# Obtener el estado de los asientos
-get_estado_asientos() {
-  curl -s "$BASE_URL/asientos"
+# Función para realizar una solicitud GET al servidor
+function make_get_request() {
+    local endpoint="$1"
+    curl -s "$BASE_URL$endpoint"
 }
 
-# Ocupar un asiento
-ocupar_asiento() {
-  local numero=$1
-  local cliente=$2
-
-  curl -s -X PUT -H "Content-Type: application/json" -d '{"numero": '"$numero"', "cliente": "'"$cliente"'"}' "$BASE_URL/asientos/ocupar"
+# Función para realizar una solicitud PUT al servidor
+function make_put_request() {
+    local endpoint="$1"
+    local payload="$2"
+    curl -s -X PUT -H "Content-Type: application/json" -d "$payload" "$BASE_URL$endpoint"
 }
 
-# Desocupar un asiento
-desocupar_asiento() {
-  local numero=$1
-
-  curl -s -X PUT -H "Content-Type: application/json" -d '{"numero": '"$numero"'}' "$BASE_URL/asientos/desocupar"
+# Función para solicitar el número de asiento al usuario
+function get_seat_number() {
+    read -p "Ingrese el número de asiento: " seat_number
+    echo "$seat_number"
 }
 
-# Mostrar ayuda
-mostrar_ayuda() {
-  echo "Uso: $0 <acción> [parámetros]"
-  echo
-  echo "Acciones disponibles:"
-  echo "  estado                  Obtener el estado de los asientos"
-  echo "  ocupar <número> <cliente>  Ocupar un asiento con un cliente"
-  echo "  desocupar <número>       Desocupar un asiento"
+# Función para solicitar el nombre del cliente al usuario
+function get_client_name() {
+    read -p "Ingrese el nombre del cliente: " client_name
+    echo "$client_name"
 }
 
-# Comprobar los argumentos proporcionados
-if [ $# -eq 0 ]; then
-  mostrar_ayuda
-  exit 1
-fi
+# Función para mostrar todos los asientos
+function show_all_seats() {
+    echo "Consultando todos los asientos..."
+    response=$(make_get_request "/asientos")
+    echo "Asientos: $response"
+}
 
-# Realizar la acción correspondiente según los argumentos
-accion=$1
+# Función para mostrar los asientos libres
+function show_available_seats() {
+    echo "Consultando asientos libres..."
+    response=$(make_get_request "/asientos/libres")
+    echo "Asientos libres: $response"
+}
 
-case "$accion" in
-  "estado")
-    get_estado_asientos
-    ;;
-  "ocupar")
-    if [ $# -ne 3 ]; then
-      mostrar_ayuda
-      exit 1
-    fi
-    numero=$2
-    cliente=$3
-    ocupar_asiento "$numero" "$cliente"
-    ;;
-  "desocupar")
-    if [ $# -ne 2 ]; then
-      mostrar_ayuda
-      exit 1
-    fi
-    numero=$2
-    desocupar_asiento "$numero"
-    ;;
-  *)
-    mostrar_ayuda
-    exit 1
-    ;;
-esac
+# Función para mostrar los asientos ocupados
+function show_occupied_seats() {
+    echo "Consultando asientos ocupados..."
+    response=$(make_get_request "/asientos/ocupados")
+    echo "Asientos ocupados: $response"
+}
+
+# Función para ocupar un asiento
+function occupy_seat() {
+    local seat_number=$(get_seat_number)
+    local client_name=$(get_client_name)
+    local payload="{\"numero\": $seat_number, \"cliente\": \"$client_name\"}"
+
+    echo "Ocupando el asiento $seat_number..."
+    response=$(make_put_request "/asientos/ocupar" "$payload")
+    echo "Respuesta: $response"
+}
+
+# Función para desocupar un asiento
+function release_seat() {
+    local seat_number=$(get_seat_number)
+    local payload="{\"numero\": $seat_number}"
+
+    echo "Desocupando el asiento $seat_number..."
+    response=$(make_put_request "/asientos/desocupar" "$payload")
+    echo "Respuesta: $response"
+}
+
+# Función principal
+function main() {
+    while true; do
+        echo "=== Aplicación Cliente de Consulta ==="
+        echo "1. Mostrar todos los asientos"
+        echo "2. Mostrar asientos libres"
+        echo "3. Mostrar asientos ocupados"
+        echo "4. Ocupar un asiento"
+        echo "5. Desocupar un asiento"
+        echo "6. Salir"
+
+        read -p "Seleccione una opción: " choice
+
+        case $choice in
+        1)
+            show_all_seats
+            ;;
+        2)
+            show_available_seats
+            ;;
+        3)
+            show_occupied_seats
+            ;;
+        4)
+            occupy_seat
+            ;;
+        5)
+            release_seat
+            ;;
+        6)
+            echo "¡Hasta luego!"
+            break
+            ;;
+        *)
+            echo "Opción inválida. Intente nuevamente."
+            ;;
+        esac
+
+        echo ""
+    done
+}
+
+# Ejecutar la función principal
+main
