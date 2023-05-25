@@ -64,6 +64,43 @@ def verificar_cuenta():
         return jsonify({'existe': False}), 200
 
 
+@app.route('/usuarios', methods=['GET'])
+def obtener_usuarios():
+    with app.app_context():
+        usuarios = User.query.all()
+        resultados = []
+        for usuario in usuarios:
+            resultados.append({
+                'id': usuario.id,
+                'nombre': usuario.nombre,
+                'apellidos': usuario.apellidos,
+                'token': usuario.token
+            })
+        return jsonify(resultados), 200
+
+
+@app.route('/tokens', methods=['GET'])
+def obtener_tokens():
+    with app.app_context():
+        tokens = [usuario.token for usuario in User.query.all()]
+        return jsonify(tokens), 200
+
+
+@app.route('/basedatos', methods=['GET'])
+def obtener_basedatos():
+    with app.app_context():
+        usuarios = User.query.all()
+        resultados = []
+        for usuario in usuarios:
+            resultados.append({
+                'id': usuario.id,
+                'nombre': usuario.nombre,
+                'apellidos': usuario.apellidos,
+                'token': usuario.token
+            })
+        return jsonify({'usuarios': resultados}), 200
+
+
 def generar_token():
     # Generar un token aleatorio de letras y números con 10 caracteres
     caracteres = string.ascii_letters + string.digits
