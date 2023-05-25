@@ -1,54 +1,53 @@
-import requests
-from flask import Flask, jsonify, request
+#!/bin/bash
 
-app = Flask(__name__)
-REGISTRO_API_URL = 'http://localhost:6900/verificar'
-PLAZAS_API_URL = 'http://localhost:7000/asientos'
-PAGAR_API_URL = 'http://localhost:6901/pagar'
+BASE_URL="http://localhost:8888"
 
+function make_post_request() {
+    local endpoint="$1"
+    local data="$2"
+    curl -s -H "Content-Type: application/json" -X POST -d "$data" "$BASE_URL$endpoint"
+}
 
-@app.route('/comprar', methods=['POST'])
-def comprar_billete():
-    data = request.get_json()
-    nombre = data.get('nombre')
-    token = data.get('token')
-    valor_billete = 150
+function make_get_request() {
+    local endpoint="$1"
+    curl -s "$BASE_URL$endpoint"
+}
 
-    # Verificar si el usuario está registrado y el token es correcto
-    response_registro = requests.post(REGISTRO_API_URL, json={'nombre': nombre, 'token': token})
-    if response_registro.status_code != 200 or not response_registro.json().get('existe'):
-        return jsonify({'mensaje': 'Usuario no registrado o token incorrecto.'}), 400
+function comprar_billete() {
+    read -p "Ingrese el nombre: " nombre
+    read -p "Ingrese el token: " token
 
-    # Verificar si existen plazas libres
-    response_plazas = requests.get(PLAZAS_API_URL)
-    plazas_estado = response_plazas.json()
-    #print(plazas_estado)
-    plazas_libres = [numero for numero, estado in plazas_estado.items() if estado['estado'] == 'libre']
-    if not plazas_libres:
-        return jsonify({'mensaje': 'No hay plazas libres disponibles.'}), 400
+    local data="{\"nombre\":\"$nombre\",\"token\":\"$token\"}"
+    local response=$(make_post_request "/comprar" "$data")
 
-    # Verificar si el usuario tiene saldo suficiente
-    response_saldo = requests.get(f'http://localhost:6901/saldo?nombre={nombre}')
-    if response_saldo.status_code != 200 or response_saldo.json().get('saldo', 0) < valor_billete:
-        return jsonify({'mensaje': 'Saldo insuficiente para comprar el billete.'}), 400
+    local mensaje=$(echo "$response" | jq -r '.mensaje')
+    local asiento=$(echo "$response" | jq -r '.asiento')
+    local saldo=$(echo "$response" | jq -r '.saldo')
 
-    # Realizar el pago
-    response_pago = requests.post(PAGAR_API_URL, json={'nombre': nombre, 'costo': valor_billete})
-    if response_pago.status_code != 200 or not response_pago.json().get('mensaje') == 'Pago realizado con éxito.':
-        return jsonify({'mensaje': 'Error al procesar el pago.'}), 500
+    echo "Mensaje: $mensaje"
+    echo "Asiento: $asiento"
+    echo "Saldo: $saldo"
+}
 
-    # Ocupar un asiento
-    asiento_a_ocupar = plazas_libres[0]
-    response_ocupar = requests.put(f'http://localhost:7000/asientos/ocupar', json={'numero': asiento_a_ocupar, 'cliente': nombre})
-    if response_ocupar.status_code != 200 or not response_ocupar.json().get('message') == 'Asiento ocupado exitosamente':
-        return jsonify({'mensaje': 'Error al ocupar el asiento.'}), 500
+function mostrar_menu() {
+    echo "========== MENÚ =========="
+    echo "1. Comprar billete"
+    echo "9. Salir"
+    echo "=========================="
+}
 
-    return jsonify({
-        'mensaje': 'Compra exitosa.',
-        'asiento': asiento_a_ocupar,
-        'saldo': response_saldo.json().get('saldo')
-    }), 200
+while true; do
+    mostrar_menu
+    read -p "Ingrese una opción: " opcion
+    echo
 
+    case $opcion in
+        1) comprar_billete ;;
+        9) break ;;
+        *) echo "Opción inválida. Por favor, seleccione una opción válida." ;;
+    esac
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8888)
+    echo
+done
+
+echo "¡Hasta luego!"
