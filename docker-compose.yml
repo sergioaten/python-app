@@ -5,21 +5,30 @@ services:
       context: ./cajero
     ports:
       - 6901:6901
+    volumes:
+      - ./bds/cajero/:/srv/instance
 
   bus:
     build:
       context: ./bus
     ports:
       - 7000:7000
+    volumes:
+      - ./bds/bus/:/srv/instance
 
   registro:
     build:
       context: ./registro
     ports:
       - 6900:6900
+    volumes:
+      - ./bds/registro/:/srv/instance
 
   tienda:
     build:
       context: ./tienda
     ports:
       - 8888:8888
+    volumes:
+    - /bds/tienda/:/srv/instance
+

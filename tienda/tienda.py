@@ -2,9 +2,9 @@ import requests
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
-REGISTRO_API_URL = 'http://localhost:6900/verificar'
-PLAZAS_API_URL = 'http://localhost:7000/asientos'
-PAGAR_API_URL = 'http://localhost:6901/pagar'
+REGISTRO_API_URL = 'http://registro:6900/verificar'
+PLAZAS_API_URL = 'http://bus:7000/asientos'
+PAGAR_API_URL = 'http://cajero:6901/pagar'
 
 
 @app.route('/comprar', methods=['POST'])
